@@ -1,0 +1,41 @@
+# Basic setup
+project: trial
+scratch: ./
+raw_data: raw_data
+outputDIR: zackular2014
+metadata: metadata.tsv
+
+# Temp directory
+tmp_dir: ./
+
+# Fastq file naming config
+suffix: _001.fastq.gz
+prefix: _L001_
+r1_suf: R1
+r2_suf: R2
+
+# Trimmomatic config
+threads: 20
+trimm_params: CROP:200
+
+## 16S adapters from Zackular et al., 2014
+primerF: GTGCCAGCMGCCGCGGTAA
+primerR: GGACTACHVGGGTWTCTAAT
+primer_err: 0.4
+primer_overlap: 3
+
+## Reference database
+database: ./reference_db/silva-138.1-ssu-nr99-seqs-515f-806r.qza
+database_classifier: ./reference_db/silva_classifier.qza
+database_tax: ./reference_db/silva-138.1-ssu-nr99-tax.qza
+
+## DADA2 - ASV flags
+truncation_err: 2
+truncation_len-f: 150
+truncation_len-r: 140
+truncation_err: 2
+quality_err: 2
+
+## Diversity metrics
+sampling_depth: 500
+
