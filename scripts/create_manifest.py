@@ -54,7 +54,7 @@ def main():
     for f in os.listdir(args.input):
         if os.path.isfile(os.path.join(args.input, f)):
             # Logic to extract sample id
-            sampleid = "".join(list(f)[:args.num_chars])
+            sampleid = f.split("_")[0]
 
             # Find direction of read & write to file
             direction = ''
