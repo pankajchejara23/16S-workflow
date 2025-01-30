@@ -1,9 +1,9 @@
 # Basic setup
 project: trial
-scratch: ./
+scratch: /mnt/data/Study/colon_cancer_datasets/16Sdatasets/zackular
 raw_data: raw_data
-outputDIR: zackular2014
-metadata: metadata.tsv
+outputDIR: results
+metadata: metadata.csv
 
 # Temp directory
 tmp_dir: ./
