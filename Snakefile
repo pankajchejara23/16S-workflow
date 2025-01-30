@@ -165,7 +165,7 @@ rule create_manifest:
 
     shell:
         """
-        python3 ../scripts/create_manifest.py --input {params.trim_dir} \
+        python3 ./scripts/create_manifest.py --input {params.trim_dir} \
             --output {params.out_dir} \
             --num_chars {params.num_chars}
         """
