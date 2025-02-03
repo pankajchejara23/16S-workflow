@@ -161,7 +161,7 @@ rule create_manifest:
         out_dir = SCRATCH + "/" + OUTPUTDIR + "/",
         num_chars = 12
     log:
-        SCRATCH + "/" + OUTPUTDIR + "/log/" + "qiime2/manifest.log"
+        SCRATCH + "/" + OUTPUTDIR + "/logs/" + "qiime2/manifest.log"
 
     shell:
         """
