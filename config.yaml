@@ -3,7 +3,7 @@ project: trial
 scratch: /mnt/data/Study/colon_cancer_datasets/16Sdatasets/zackular
 raw_data: raw_data
 outputDIR: results
-metadata: metadata.csv
+metadata: metadata.tsv
 
 # Temp directory
 tmp_dir: ./
