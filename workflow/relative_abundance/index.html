@@ -777,6 +777,7 @@
 
 
 <h1 id="relative-abundance-computation">Relative abundance computation</h1>
+<p>This step transforms Qiime2 artifacts containing ASVs (Amplicon Sequence Variants) and their associated taxonomies into TSV (Tab-Separated Values) format for downstream analysis. This conversion makes the data compatible with other analysis tools and workflows.
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">##########################################################</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1">#                 RELATIVE FREQUENCY TABLE GENERATION</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1">##########################################################</span>
@@ -831,7 +832,7 @@
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    <span class="n">SCRATCH</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">OUTPUTDIR</span> <span class="o">+</span> <span class="s2">&quot;/logs/&quot;</span> <span class="o">+</span> <span class="n">PROJ</span> <span class="o">+</span>  <span class="s2">&quot;_rel_tsv_q2.log&quot;</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  <span class="n">shell</span><span class="p">:</span>
 </span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    <span class="s2">&quot;biom convert -i </span><span class="si">{input.biom_table}</span><span class="s2"> -o </span><span class="si">{output.rel_table_tsv}</span><span class="s2"> --to-tsv&quot;</span>
-</span></code></pre></div>
+</span></code></pre></div></p>
 
 
 

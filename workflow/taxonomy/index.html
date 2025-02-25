@@ -851,6 +851,12 @@
 
 
 <h1 id="taxonomy-generation">Taxonomy generation</h1>
+<p>This step assigns taxonomic labels to the amplicon sequence variants (ASVs) obtained from the denoising step. To accomplish this, a prebuilt <strong>taxonomy classifier</strong>, trained on a reference dataset, is used. Multiple reference datasets are available for this task, such as Greengenes and Silva.</p>
+<p>The taxonomy classifier assigns taxonomic labels to each ASV, providing information on hierarchical levels such as Domain, Phylum, Class, Order, Genus, and Species.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>16S rRNA sequence analysis typically supports taxonomic resolution only up to the genus level.</p>
+</div>
 <h2 id="classify-taxonomies">Classify taxonomies</h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">##########################################################</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1">#                 TAXONOMIC ASSIGNMENT</span>
