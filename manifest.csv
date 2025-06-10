@@ -1,13 +1,6 @@
 sample-id,absolute-filepath,direction
 Cancer2-2455,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer2-2455_S62_L001_R1_001.fastq.gz,forward
 Healthy2-2779,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy2-2779_S32_L001_R2_001.fastq.gz,reverse
-Healthy3-3021,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy3-3021_S33_L001_R2_001.fastq.gz,reverse
-Cancer1-2355,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer1-2355_S61_L001_R1_001.fastq.gz,forward
-Cancer3-2513,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer3-2513_S63_L001_R1_001.fastq.gz,forward
-Healthy1-2027,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy1-2027_S31_L001_R1_001.fastq.gz,forward
-Healthy1-2027,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy1-2027_S31_L001_R2_001.fastq.gz,reverse
 Cancer2-2455,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer2-2455_S62_L001_R2_001.fastq.gz,reverse
-Healthy3-3021,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy3-3021_S33_L001_R1_001.fastq.gz,forward
 Healthy2-2779,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Healthy2-2779_S32_L001_R1_001.fastq.gz,forward
-Cancer1-2355,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer1-2355_S61_L001_R2_001.fastq.gz,reverse
-Cancer3-2513,/Users/pankaj/Documents/projects/16S-workflow/raw_data/Cancer3-2513_S63_L001_R2_001.fastq.gz,reverse
+

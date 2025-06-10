@@ -40,11 +40,11 @@ database_tax: reference_db/silva-138.1-ssu-nr99-tax.qza
 
 ## DADA2 - ASV flags
 truncation_err: 2
-truncation_len-f: 150
-truncation_len-r: 140
+truncation_len-f: 0
+truncation_len-r: 0
 truncation_err: 2
 quality_err: 2
 
 ## Diversity metrics
-sampling_depth: 500
+sampling_depth: 100
 

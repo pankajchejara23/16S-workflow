@@ -131,6 +131,7 @@ rule fastqc_before:
 ##########################################################
 rule multiqc_before:
     input:
+        expand( INPUTDIR + "/" + FILE_NAME_PATTERN + EXT,sample=SAMPLES,num=NUMS),
         expand( OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.zip", sample=SAMPLES,num=NUMS)
     output:
         OUTPUTDIR + "/multiqc/before_trim/" + "multiqc_report.html",
@@ -186,6 +187,7 @@ rule fastqc_after:
 ##########################################################
 rule multiqc_after:
     input:
+        expand( INPUTDIR + "/" + FILE_NAME_PATTERN + EXT,sample=SAMPLES,num=NUMS),
         expand( OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.zip", sample=SAMPLES,num=NUMS)
     output:
          OUTPUTDIR + "/multiqc/after_trim/multiqc_report.html"
@@ -202,7 +204,8 @@ rule multiqc_after:
 ##########################################################
 rule create_manifest:
     input:
-        MANIFEST
+        MANIFEST,
+        
     output:
          OUTPUTDIR + "/" + "manifest.csv"
     log:
@@ -222,7 +225,9 @@ rule create_manifest:
 ##########################################################
 rule import_qiime:
   input:
-     OUTPUTDIR + "/" + "manifest.csv"
+     OUTPUTDIR + "/" + "manifest.csv",
+
+
   output:
     q2_import =  OUTPUTDIR +"/" + PROJ + "-PE-demux.qza"
   log:
@@ -458,8 +463,10 @@ rule phy_tree:
 ##########################################################
 rule div_met:
   input:
+     METADATA,
      rooted_tree =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
-     table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza"
+     table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
+     
   output:
      output_dir = directory( OUTPUTDIR + "/diversity")
   
