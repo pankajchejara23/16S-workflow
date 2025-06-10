@@ -39,6 +39,11 @@ conda activate qiime2-snakemake
 ```
 
 ## Usage
+### Testing the Workflow
+The workflow has unit tests with example dataset. The following commands run all the unit tests
+``` sh
+pytest .tests
+```
 ### Running the Workflow
 1. Prepare your input data: Make sure your FASTQ files are ready for processing.
 2. Edit configuration files: Customize the configuration files to specify the paths to your data and any specific parameters you want to adjust.
@@ -64,6 +69,7 @@ You can modify specific parts of the workflow by adjusting the following configu
 ├── metadata.csv            # Metadata file for example dataset
 ├── envs/environment.yaml       # Conda environment file for dependencies
 ├── reference_db/               # Directory for reference db, taxonomy and pre-built classifier
+├── .tests/               # Directory for unit test code
 └── scripts/               # Custom scripts for specific tasks
 
 
