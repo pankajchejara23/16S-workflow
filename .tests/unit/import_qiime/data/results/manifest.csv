@@ -1,0 +1,5 @@
+sample-id,absolute-filepath,direction
+Cancer2-2455,/Users/pankaj/Documents/16S-workflow-new/results/trim/Cancer2-2455_S62_L001_R1_001.fastq.gz,forward
+Healthy2-2779,/Users/pankaj/Documents/16S-workflow-new/results/trim/Healthy2-2779_S32_L001_R2_001.fastq.gz,reverse
+Cancer2-2455,/Users/pankaj/Documents/16S-workflow-new/results/trim/Cancer2-2455_S62_L001_R2_001.fastq.gz,reverse
+Healthy2-2779,/Users/pankaj/Documents/16S-workflow-new/results/trim/Healthy2-2779_S32_L001_R1_001.fastq.gz,forward
