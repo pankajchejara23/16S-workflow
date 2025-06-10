@@ -1,0 +1,4 @@
+# A complete 16S amplicon sequence analysis workflow
+This website provides a detailed explaination of automating the analysis of 16S amplicon read sequences using [Snakemake](https://snakemake.readthedocs.io/en/stable/). A complete analysis of 16S amplicon read sequences consists of several steps, ranging from quality control, taxonomy generation to statistical analysis. These steps must be executed in a specific order. 
+
+To automate the execution of all analysis steps for 16S amplicon data, we use a workflow manager such as Snakemake. In this tutorial, we will demonstrate **how to use Snakemake to create a workflow that reads raw 16S amplicon sequences and produces relative abundace data** for subsequent analysis. 
