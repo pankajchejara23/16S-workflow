@@ -3,7 +3,7 @@
 
 # Base snakefile: https://github.com/shu251/tagseq-qiime2-snakemake/blob/master/Snakefile-asv
 
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
 
 import io
@@ -16,92 +16,109 @@ import pathlib
 ##########################################################
 
 PROJ = config["project"]
-SCRATCH = config["scratch"]
 INPUTDIR = config["raw_data"]
 OUTPUTDIR = config['outputDIR']
 METADATA = config["metadata"]
+MANIFEST = config["manifest"]
+
+
 SAMPLING_DEPTH= config['sampling_depth']
 
 # Fastq files naming config
-SUF = config['suffix']
+FILE_NAME_PATTERN = config['file_name_pattern']
+EXT = config['extension']
 R1_SUF = str(config["r1_suf"])
 R2_SUF = str(config["r2_suf"])
 
+
 # Trimmomatic config
+TRIMM_R1 = config['file_r1']
+TRIMM_R2 = config['file_r2']
 TRIMM_PARAMS = config['trimm_params']
 
 # global wild cards of sample and pairpair list
-(SAMPLES,NUMS) = glob_wildcards(SCRATCH+"/" + INPUTDIR +"/"+"{sample}_L001_{num}" + SUF)
+(SAMPLES,NUMS) = glob_wildcards(INPUTDIR +"/"+ FILE_NAME_PATTERN + EXT)
 
 SAMPLES = set(SAMPLES)
 NUMS = set(NUMS)
+
+print('Samples:',SAMPLES)
+print('NUMS',NUMS)
 
 # Database information
 DB = config["database"]
 DB_classifier = config["database_classifier"]
 DB_tax = config["database_tax"]
 
-# global wild cards of sample and pairpair list
-(SAMPLES,NUMS) = glob_wildcards(SCRATCH+"/" + INPUTDIR +"/"+"{sample}_L001_{num}" + SUF)
-
-SAMPLES = set(SAMPLES)
-NUMS = set(NUMS)
-
-
-
 rule all:
   input:
-    # Fastqc
-    expand(SCRATCH + "/" + OUTPUTDIR + "/fastqc/" + "{sample}_L001_{num}_fastqc.html",sample=SAMPLES,num=NUMS),
-    expand(SCRATCH + "/" + OUTPUTDIR + "/fastqc/" + "{sample}_L001_{num}_fastqc.zip",sample=SAMPLES,num=NUMS),
-    # Multiqc
-    SCRATCH + "/" + OUTPUTDIR + "/multiqc/multiqc_report.html",
-    # Trimmomatic
-    expand(SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R1_paired.fastq.gz",sample=SAMPLES),
-    expand(SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R2_paired.fastq.gz",sample=SAMPLES),
-    # Manifest file
-    SCRATCH + "/" + OUTPUTDIR + "/" + "manifest.csv",
+    # Before trim Fastqc results
+    expand( OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.html",sample=SAMPLES,num=NUMS),
+    expand(OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.zip",sample=SAMPLES,num=NUMS),
+
+    # Before trim Multiqc results
+    OUTPUTDIR + "/multiqc/before_trim/" + "multiqc_report.html", 
+
+    expand(OUTPUTDIR + "/trim/{sample}_L001_R1_001.fastq.gz",sample=SAMPLES),
+    expand(OUTPUTDIR + "/trim/{sample}_L001_R2_001.fastq.gz",sample=SAMPLES),
+
+    expand(OUTPUTDIR + "/trim/{sample}_L001_R1_001_unpaired.fastq.gz",sample=SAMPLES),
+    expand(OUTPUTDIR + "/trim/{sample}_L001_R2_001_unpaired.fastq.gz",sample=SAMPLES), 
+
+    # After trim Fastqc results
+    expand(OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.html",sample=SAMPLES,num=NUMS),
+    expand(OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.zip",sample=SAMPLES,num=NUMS),
+
+    # After trim Multiqc results
+    OUTPUTDIR + "/multiqc/after_trim/multiqc_report.html",
+
+    # Updated manifest file
+    OUTPUTDIR + "/" + "manifest.csv",
+
     # Qiime2 artifact
-    q2_import = SCRATCH + "/" + OUTPUTDIR +"/" +  PROJ + "-PE-demux.qza",
+    q2_import =   OUTPUTDIR +"/" +  PROJ + "-PE-demux.qza",
     # Qiime2 primer removal
-    q2_primerRM = SCRATCH + "/" + OUTPUTDIR +"/" +  PROJ + "-PE-demux-noprimer.qza",
+    q2_primerRM =   OUTPUTDIR +"/" +  PROJ + "-PE-demux-noprimer.qza",
     # Visualization
-    raw = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-PE-demux.qzv",
-    primer = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-PE-demux-noprimer.qzv",
+    raw =   OUTPUTDIR + "/viz/" + PROJ + "-PE-demux.qzv",
+    primer =   OUTPUTDIR + "/viz/" + PROJ + "-PE-demux-noprimer.qzv",
     # Dada2 results
-    table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
-    rep = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
-    stats = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza",
-    stats_viz = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-stats-dada2.qzv",
+    table =   OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
+    rep =   OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
+    stats =   OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza",
+    stats_viz =   OUTPUTDIR + "/viz/" + PROJ + "-stats-dada2.qzv",
     # Taxonomic table
-    sklearn = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza",
-    table_biom = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "feature-table.biom",
-    table_tsv = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.tsv",
-    table_tax = SCRATCH + "/" + OUTPUTDIR + "/asv/"  + "taxonomy.tsv",
+    sklearn =   OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza",
+    table_biom =   OUTPUTDIR + "/asv/" + "feature-table.biom",
+    table_tsv =   OUTPUTDIR + "/asv/" + PROJ + "-asv-table.tsv",
+    table_tax =   OUTPUTDIR + "/asv/"  + "taxonomy.tsv",
     # Phylogenetic outputs
-    aligned_seqs = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-aligned-rep-seqs.qza",
-    aligned_masked = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-masked-aligned-rep-seqs.qza",
-    unrooted_tree = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-unrooted-tree.qza",
-    rooted_tree = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
+    aligned_seqs =   OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-aligned-rep-seqs.qza",
+    aligned_masked =   OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-masked-aligned-rep-seqs.qza",
+    unrooted_tree =   OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-unrooted-tree.qza",
+    rooted_tree =   OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
     # Relative frequency 
-    table_phyla = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza",
-    rel_table = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza",
-    biom_table = SCRATCH + "/" + OUTPUTDIR + "/asv/rel-table/feature-table.biom",
-    rel_table_tsv = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rel-freq-table.tsv",
+    table_phyla =   OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza",
+    rel_table =   OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza",
+    biom_table =   OUTPUTDIR + "/asv/rel-table/feature-table.biom",
+    rel_table_tsv =   OUTPUTDIR + "/asv/" +  PROJ + "-rel-freq-table.tsv",
     # Diversity metrics
-    output_dir = SCRATCH + "/" + OUTPUTDIR + "/diversity"
+    output_dir =   OUTPUTDIR + "/diversity"
+
+
+ 
 
 ##########################################################
 #                 FASTQC - QUALITY REPORTS
 ##########################################################
-rule fastqc:
+rule fastqc_before:
     input:
-        SCRATCH + "/" + INPUTDIR + "/" + "{sample}_L001_{num}" + SUF
+        INPUTDIR + "/" + FILE_NAME_PATTERN + EXT
     output:
-        html = SCRATCH + "/" + OUTPUTDIR + "/fastqc/" + "{sample}_L001_{num}_fastqc.html",
-        zip = SCRATCH + "/" + OUTPUTDIR + "/fastqc/" + "{sample}_L001_{num}_fastqc.zip",
+        html =  OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.html",
+        zip =  OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.zip",
     log:
-        SCRATCH + "/" + OUTPUTDIR + "/logs/" + "fastqc/fastqc_{sample}_{num}.log",
+        OUTPUTDIR + "/logs/" + "fastqc/fastqc_{sample}_{num}.log",
     threads: 20
     resources:
         mem_mb = 1024
@@ -112,62 +129,92 @@ rule fastqc:
 ##########################################################
 #                 MULTIQC - QUALITY REPORTS MERGE
 ##########################################################
-rule multiqc:
+rule multiqc_before:
     input:
-        expand(SCRATCH + "/" + OUTPUTDIR + "/fastqc/" + "{sample}_L001_{num}_fastqc.zip", sample=SAMPLES,num=NUMS)
+        expand( OUTPUTDIR + "/fastqc/before_trim/" + "{sample}_{num}_fastqc.zip", sample=SAMPLES,num=NUMS)
     output:
-        SCRATCH + "/" + OUTPUTDIR + "/multiqc/multiqc_report.html"
+        OUTPUTDIR + "/multiqc/before_trim/" + "multiqc_report.html",
     log:
-        SCRATCH + "/logs" + "/multiqc/multiqc.log"
+         OUTPUTDIR + "/logs" + "/multiqc/multiqc.log",
     params:
-        report_dir = SCRATCH + "/" + OUTPUTDIR + "/multiqc/" 
+        use_input_files_only=True,
     wrapper:
-        "v1.31.1/bio/multiqc"
+        "v6.2.0/bio/multiqc"
 
 ##########################################################
 #                 TRIMMOMATIC
 ##########################################################
 rule trimmomatic:
     input:
-        r1 = SCRATCH + "/" + INPUTDIR + "/" + "{sample}_L001_R1_001.fastq.gz",
-        r2 = SCRATCH + "/" + INPUTDIR + "/" + "{sample}_L001_R2_001.fastq.gz",
+        r1 =  INPUTDIR + "/{sample}_L001_R1_001.fastq.gz",
+        r2 =  INPUTDIR + "/{sample}_L001_R2_001.fastq.gz",
     output:
-        r1 = SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R1_paired.fastq.gz",
-        r2 = SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R2_paired.fastq.gz",
+        r1 =  OUTPUTDIR + "/trim/{sample}_L001_R1_001.fastq.gz",
+        r2 =  OUTPUTDIR + "/trim/{sample}_L001_R2_001.fastq.gz",
 
-        r1_unpaired = SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R1_unpaired.fastq.gz",
-        r2_unpaired = SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R2_unpaired.fastq.gz",
+        r1_unpaired =  OUTPUTDIR + "/trim/{sample}_L001_R1_001_unpaired.fastq.gz",
+        r2_unpaired =  OUTPUTDIR + "/trim/{sample}_L001_R2_001_unpaired.fastq.gz",
     threads: 20
     log:
-        SCRATCH + "/" + OUTPUTDIR + "/logs/" + "trimmomatic/{sample}.log"
+         OUTPUTDIR + "/logs/" + "trimmomatic/{sample}.log"
     params:
         trimmer=[str(config['trimm_params'])]
     wrapper:
         "v5.5.2/bio/trimmomatic/pe"
 
 
+##########################################################
+#                 FASTQC - QUALITY REPORTS AFTER TRIMMING
+##########################################################
+rule fastqc_after:
+    input:
+        OUTPUTDIR + "/trim/" +  FILE_NAME_PATTERN + EXT
+    output:
+        html =  OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.html",
+        zip =  OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.zip",
+    log:
+        OUTPUTDIR + "/logs/" + "fastqc/fastqc_after-trim_{sample}_{num}.log",
+    threads: 20
+    resources:
+        mem_mb = 1024
+    wrapper:
+        "v5.5.2/bio/fastqc"
+
 
 ##########################################################
-#                   CREATE MANIFEST FILE
+#                 MULTIQC - QUALITY REPORTS MERGE AFTER TRIMMING
+##########################################################
+rule multiqc_after:
+    input:
+        expand( OUTPUTDIR + "/fastqc/after_trim/" + "{sample}_{num}_fastqc.zip", sample=SAMPLES,num=NUMS)
+    output:
+         OUTPUTDIR + "/multiqc/after_trim/multiqc_report.html"
+    log:
+         OUTPUTDIR + "/logs" + "/multiqc/multiqc_after-trim.log"
+    params:
+        report_dir =  OUTPUTDIR + "/multiqc/after_trim/" 
+    wrapper:
+        "v1.31.1/bio/multiqc"
+
+
+##########################################################
+#                   UPDATE MANIFEST FILE
 ##########################################################
 rule create_manifest:
     input:
-        r1 = expand(SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R1_paired.fastq.gz",sample=SAMPLES),
-        r2 = expand(SCRATCH + "/" + OUTPUTDIR + "/trim/" +"{sample}_R2_paired.fastq.gz",sample=SAMPLES),
+        MANIFEST
     output:
-        SCRATCH + "/" + OUTPUTDIR + "/" + "manifest.csv"
-    params:
-        trim_dir = SCRATCH + "/" + OUTPUTDIR + "/trim/",
-        out_dir = SCRATCH + "/" + OUTPUTDIR + "/",
-        num_chars = 12
+         OUTPUTDIR + "/" + "manifest.csv"
     log:
-        SCRATCH + "/" + OUTPUTDIR + "/logs/" + "qiime2/manifest.log"
+         OUTPUTDIR + "/logs/" + "qiime2/manifest.log"
+    params:
+          OUTPUTDIR
 
     shell:
         """
-        python3 ./scripts/create_manifest.py --input {params.trim_dir} \
-            --output {params.out_dir} \
-            --num_chars {params.num_chars}
+        python3 ./scripts/update_manifest.py --input {input} \
+            --output {output} \
+            --file-dir {params}
         """
 
 ##########################################################
@@ -175,11 +222,11 @@ rule create_manifest:
 ##########################################################
 rule import_qiime:
   input:
-    SCRATCH + "/" + OUTPUTDIR + "/" + "manifest.csv"
+     OUTPUTDIR + "/" + "manifest.csv"
   output:
-    q2_import = SCRATCH + "/" + OUTPUTDIR +"/" + PROJ + "-PE-demux.qza"
+    q2_import =  OUTPUTDIR +"/" + PROJ + "-PE-demux.qza"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_q2.log"
   params:
     type="SampleData[PairedEndSequencesWithQuality]",
     input_format="PairedEndFastqManifestPhred33",
@@ -199,11 +246,11 @@ rule import_qiime:
 
 rule rm_primers:
   input:
-    q2_import = SCRATCH + "/" + OUTPUTDIR +"/" + PROJ + "-PE-demux.qza"
+    q2_import =  OUTPUTDIR +"/" + PROJ + "-PE-demux.qza"
   output:
-    q2_primerRM = SCRATCH + "/" + OUTPUTDIR +"/" + PROJ +  "-PE-demux-noprimer.qza"
+    q2_primerRM =  OUTPUTDIR +"/" + PROJ +  "-PE-demux-noprimer.qza"
   log:
-     SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_primer_q2.log"
+      OUTPUTDIR + "/logs/" + PROJ + "_primer_q2.log"
 
   shell:
     """qiime cutadapt trim-paired \
@@ -221,13 +268,13 @@ rule rm_primers:
 
 rule get_stats:
   input:
-    q2_import = SCRATCH + "/" + OUTPUTDIR +"/" +  PROJ + "-PE-demux.qza",
-    q2_primerRM = SCRATCH + "/" + OUTPUTDIR +"/" +  PROJ + "-PE-demux-noprimer.qza"
+    q2_import =  OUTPUTDIR +"/" +  PROJ + "-PE-demux.qza",
+    q2_primerRM =  OUTPUTDIR +"/" +  PROJ + "-PE-demux-noprimer.qza"
   output:
-    raw = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-PE-demux.qzv",
-    primer = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-PE-demux-noprimer.qzv"
+    raw =  OUTPUTDIR + "/viz/" + PROJ + "-PE-demux.qzv",
+    primer =  OUTPUTDIR + "/viz/" + PROJ + "-PE-demux-noprimer.qzv"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_getviz_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_getviz_q2.log"
   shell:
     """
      qiime demux summarize --i-data {input.q2_import} --o-visualization {output.raw}
@@ -240,13 +287,13 @@ rule get_stats:
 
 rule dada2:
   input:
-    q2_primerRM = SCRATCH + "/" + OUTPUTDIR +"/" + PROJ + "-PE-demux-noprimer.qza"
+    q2_primerRM =  OUTPUTDIR +"/" + PROJ + "-PE-demux-noprimer.qza"
   output:
-    table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
-    rep = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
-    stats = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza"
+    table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
+    rep =  OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
+    stats =  OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_dada2_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_dada2_q2.log"
   shell:
     """qiime dada2 denoise-paired \
         --i-demultiplexed-seqs {input.q2_primerRM} \
@@ -260,11 +307,11 @@ rule dada2:
 
 rule dada2_stats:
   input:
-    stats = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza"
+    stats =  OUTPUTDIR + "/asv/" + PROJ + "-stats-dada2.qza"
   output:
-    stats_viz = SCRATCH + "/" + OUTPUTDIR + "/viz/" + PROJ + "-stats-dada2.qzv"
+    stats_viz =  OUTPUTDIR + "/viz/" + PROJ + "-stats-dada2.qzv"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_dada2-stats_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_dada2-stats_q2.log"
   shell:
    """qiime metadata tabulate \
        --m-input-file {input.stats} \
@@ -277,12 +324,12 @@ rule dada2_stats:
 
 rule assign_tax:
   input:
-    rep = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rep-seqs.qza",
+    rep =  OUTPUTDIR + "/asv/" +  PROJ + "-rep-seqs.qza",
     db_classified = DB_classifier
   output:
-    sklearn = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
+    sklearn =  OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_sklearn_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_sklearn_q2.log"
   shell:
     """qiime feature-classifier classify-sklearn \
 	  --i-classifier {input.db_classified} \
@@ -295,35 +342,35 @@ rule assign_tax:
 ##########################################################
 rule gen_table:
   input:
-    table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza"
+    table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza"
   output:
-    table_biom = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "feature-table.biom"
+    table_biom =  OUTPUTDIR + "/asv/" + "feature-table.biom"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_exportBIOM_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_exportBIOM_q2.log"
   params:
-    directory(SCRATCH + "/" + OUTPUTDIR + "/asv/")
+    directory( OUTPUTDIR + "/asv/")
   shell:
     "qiime tools export --input-path {input.table} --output-path {params}"
 
 rule convert:
   input:
-    table_biom = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "feature-table.biom"
+    table_biom =  OUTPUTDIR + "/asv/" + "feature-table.biom"
   output:
-    SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.tsv"
+     OUTPUTDIR + "/asv/" + PROJ + "-asv-table.tsv"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_exportTSV_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_exportTSV_q2.log"
   shell:
     "biom convert -i {input} -o {output} --to-tsv"
 
 rule gen_tax:
   input:
-    sklearn = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
+    sklearn =  OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
   output:
-     table_tax = SCRATCH + "/" + OUTPUTDIR + "/asv/"  + "taxonomy.tsv",
+     table_tax =  OUTPUTDIR + "/asv/"  + "taxonomy.tsv",
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_exportTAXTSV_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_exportTAXTSV_q2.log"
   params:
-    directory(SCRATCH + "/" + OUTPUTDIR + "/asv/")
+    directory( OUTPUTDIR + "/asv/")
   shell:
     "qiime tools export --input-path {input.sklearn} --output-path {params}"
 
@@ -333,12 +380,12 @@ rule gen_tax:
 ##########################################################
 rule taxa_collapse:
   input:
-    table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
-    sklearn = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
+    table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza",
+    sklearn =  OUTPUTDIR + "/asv/" +  PROJ + "-tax_sklearn.qza"
   output:
-    table_phyla = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza"
+    table_phyla =  OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_taxa_collapse_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_taxa_collapse_q2.log"
   shell:
     """qiime taxa collapse \
 	  --i-table {input.table} \
@@ -349,11 +396,11 @@ rule taxa_collapse:
 
 rule rel_freq_table:
   input:
-    table = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza"
+    table =  OUTPUTDIR + "/asv/" +  PROJ + "-phyla-table.qza"
   output:
-    rel_table = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza"
+    rel_table =  OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_rel_freq_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_rel_freq_q2.log"
   shell:
     """qiime feature-table relative-frequency \
      --i-table {input.table} \
@@ -361,13 +408,13 @@ rule rel_freq_table:
 
 rule rel_freq_table_biom:
   input:
-    rel_table = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza"
+    rel_table =  OUTPUTDIR + "/asv/" +  PROJ + "-rel-phyla-table.qza"
   output:
-    biom_table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "rel-table/feature-table.biom"
+    biom_table =  OUTPUTDIR + "/asv/" + "rel-table/feature-table.biom"
   params:
-    directory(SCRATCH + "/" + OUTPUTDIR + "/asv/" + "rel-table/")
+    directory( OUTPUTDIR + "/asv/" + "rel-table/")
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_rel_freq_biom_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_rel_freq_biom_q2.log"
   shell:"""qiime tools export \
      --input-path {input.rel_table} \
      --output-path {params}
@@ -375,11 +422,11 @@ rule rel_freq_table_biom:
 
 rule biom_tsv:
   input:
-    biom_table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "rel-table/feature-table.biom"
+    biom_table =  OUTPUTDIR + "/asv/" + "rel-table/feature-table.biom"
   output:
-    rel_table_tsv = SCRATCH + "/" + OUTPUTDIR + "/asv/" +  PROJ + "-rel-freq-table.tsv"
+    rel_table_tsv =  OUTPUTDIR + "/asv/" +  PROJ + "-rel-freq-table.tsv"
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ +  "_rel_tsv_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ +  "_rel_tsv_q2.log"
   shell:
     "biom convert -i {input.biom_table} -o {output.rel_table_tsv} --to-tsv"
 
@@ -388,14 +435,14 @@ rule biom_tsv:
 ##########################################################
 rule phy_tree:
   input:
-     rep = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
+     rep =  OUTPUTDIR + "/asv/" + PROJ + "-rep-seqs.qza",
   output:
-    aligned_seqs = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-aligned-rep-seqs.qza",
-    aligned_masked = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-masked-aligned-rep-seqs.qza",
-    unrooted_tree = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-unrooted-tree.qza",
-    rooted_tree = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
+    aligned_seqs =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-aligned-rep-seqs.qza",
+    aligned_masked =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-masked-aligned-rep-seqs.qza",
+    unrooted_tree =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-unrooted-tree.qza",
+    rooted_tree =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_phylogeneticTREE_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_phylogeneticTREE_q2.log"
 
   shell:
     """qiime phylogeny align-to-tree-mafft-fasttree \
@@ -411,13 +458,13 @@ rule phy_tree:
 ##########################################################
 rule div_met:
   input:
-     rooted_tree = SCRATCH + "/" + OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
-     table = SCRATCH + "/" + OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza"
+     rooted_tree =  OUTPUTDIR + "/asv/" + "tree/" + PROJ + "-rooted-tree.qza",
+     table =  OUTPUTDIR + "/asv/" + PROJ + "-asv-table.qza"
   output:
-     output_dir = directory(SCRATCH + "/" + OUTPUTDIR + "/diversity")
+     output_dir = directory( OUTPUTDIR + "/diversity")
   
   log:
-    SCRATCH + "/" + OUTPUTDIR + "/logs/" + PROJ + "_phylogeneticTREE_q2.log"
+     OUTPUTDIR + "/logs/" + PROJ + "_phylogeneticTREE_q2.log"
 
   shell:
     """qiime diversity core-metrics-phylogenetic \
